@@ -7,7 +7,7 @@ Módulo de download dos arquivos pdf
 '''
 import requests
 import headers
-import scrapers.udia as udia
+import scrapers.udia as Udia
 import utils.logger as Logs
 
 CHUNK_SIZE = 512
@@ -15,16 +15,17 @@ CHUNK_SIZE = 512
 '''
     Função principal de download dos documentos
     Retorna o docName do ultimo arquivo salvo
+
+    Atualmente espera a lista de uberlandia, corrigir para receber qualquer cidade
 '''
-def download_docs(documentos: list[str]):
+def download_pdfs(links: list[str]):
     session = requests.Session()
     session.headers.update(headers.HEADERS)
     lastDownloadDocName = ''
     try:
-        for documento in documentos:
-            pdf = udia.obter_link_pdf(documento)
-            docName = udia.obter_edicao_documento(documento) + '.pdf'
-            with session.get(pdf, stream=True, timeout=30) as req:
+        for link in links:
+            docName = Udia.doc_name_from_link(link)
+            with session.get(link, stream=True, timeout=30) as req:
                 Logs.log(f'GET: {docName}')
                 if req.status_code != 200:
                     Logs.log(f"Falha no GET: status {req.status_code}")
@@ -34,8 +35,8 @@ def download_docs(documentos: list[str]):
                             file.write(chunk)
                         Logs.log(f'{docName} salvo.')
                         lastDownloadDocName = docName
-    except Exception:
-        Logs.log("Erro no download")
+    except Exception as ex:
+        Logs.log(f"Erro no download: {ex}")
     finally:
         Logs.log("Download concluído")
     return lastDownloadDocName

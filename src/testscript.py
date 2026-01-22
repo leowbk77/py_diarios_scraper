@@ -36,6 +36,8 @@ print()
 print(docs)
 print()
 print(links)
+print()
+print(Udia.doc_name_from_link(links[0]))
 '''
 
 tresDocs = []

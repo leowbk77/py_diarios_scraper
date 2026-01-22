@@ -85,6 +85,9 @@ def pdf_links_from_doc_list(documentos: list[str], ano: int, mes: int):
         links.append(urlPdf)
     return links
 
+def doc_name_from_link(link: str):
+    return link.split('/')[7]
+
 
 #=====================================Funções que serão substituidas===================================
 
@@ -98,7 +101,6 @@ def obter_edicao_documento(urlDocumento: str):
     # pre-2018 https://www.uberlandia.mg.gov.br/diario-oficial/edicao-5287/
     edicao = urlDocumento.split('/')[4]
     return edicao[7:].upper()
-
 '''
     Retorna uma lista com os documentos disponíveis no objeto da pagina
     Deprecated ----- Usar o obter_docs ------------------
@@ -109,8 +111,6 @@ def obter_links_dos_documentos(paginaAtual: BeautifulSoup):
     for documento in diarios:
         documentos.append(documento.a.get('href'))
     return documentos
-
-
 '''
     Retorna a lista com os links para download dos pdfs a partir da lista de documentos 
     (retorno de obter_links_dos_documentos())
@@ -124,7 +124,6 @@ def obter_link_pdfs_from_list(documentos: list[str]):
         urlPdf = urlAtual + obter_edicao_documento(documento) + '.pdf'
         pdfs.append(urlPdf)
     return pdfs
-
 '''
     Obtém o link para o arquivo pdf no site da prefeitura a partir
     do link do documento obtido na lista de docs retornada em 
