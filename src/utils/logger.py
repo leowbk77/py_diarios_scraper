@@ -1,6 +1,8 @@
 '''
 lmf
+
 simple_logger.py
+
 Logger para o scraper
 '''
 from datetime import datetime, date

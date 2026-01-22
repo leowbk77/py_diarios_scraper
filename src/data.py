@@ -1,6 +1,8 @@
 '''
 lmf
+
 data.py
+
 Gerenciamento do armazenamento dos dados dos documentos
 para controle de download e Full Text Search
 '''
@@ -62,7 +64,7 @@ def create_tbl_last_ano_mes_download(dbCon: sqlite3.Connection):
                                 """
     sqlInitAnoMesDownload = """
                                 INSERT INTO last_ano_mes_download (id, ano, mes)
-                                VALUES (1, 2015, 1, 'xxxxx.pdf')
+                                VALUES (1, 2015, 1, 'x.pdf')
                                 """
     cursor = dbCon.cursor()
     cursor.execute(sqlLastAnoMesDownload)
