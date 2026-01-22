@@ -1,7 +1,7 @@
 '''
 lmf
 
-data.py
+database.py
 
 Gerenciamento do armazenamento dos dados dos documentos
 para controle de download e Full Text Search
