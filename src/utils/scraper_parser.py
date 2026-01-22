@@ -3,7 +3,7 @@ lmf
 
 parser_conf.py
 
-Script de configuração do parser de argumentos
+Script de configuração do parser de argumentos do scraper
 '''
 import argparse
 parser = argparse.ArgumentParser(

@@ -1,13 +1,9 @@
 '''
-udia.py\n
-Léo MF.\n
-versao inicial do scraper para o site da prefeitura de Uberlândia\n\n
+udia.py
 
-DOCS BS4: https://beautiful-soup-4.readthedocs.io/en/latest/# \n
-DOCS REQUESTS: https://requests.readthedocs.io/en/latest/user/quickstart/#make-a-request
-\n\n
-    - tratamento de erros não implementado\n
-    - download e acesso ao html ok\n
+Léo MF.
+
+versao inicial do scraper para o site da prefeitura de Uberlândia
 '''
 import requests
 from bs4 import BeautifulSoup

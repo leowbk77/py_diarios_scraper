@@ -7,7 +7,7 @@ Módulo principal do scraper
 '''
 import data.data as data
 import scrapers.udia as Udia
-from utils import logger as Logs, parser_conf as Args
+from utils import logger as Logs, scraper_parser as Args
 
 args = Args.parser.parse_args()
 Logs.init_log()
