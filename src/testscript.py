@@ -1,4 +1,4 @@
-import headers
+import utils.net as net
 import scrapers.udia as Udia
 import utils.logger as Logs
 import downloader

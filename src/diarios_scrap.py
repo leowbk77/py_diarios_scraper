@@ -5,9 +5,8 @@ diarios_scrap.py
 
 Módulo principal do scraper
 '''
-import parser_conf
-import downloader
-import data
+import utils.parser_conf as parser_conf
+import data.data as data
 import scrapers.udia as Udia
 import utils.logger as Logs
 

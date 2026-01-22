@@ -10,14 +10,14 @@ DOCS REQUESTS: https://requests.readthedocs.io/en/latest/user/quickstart/#make-a
     - download e acesso ao html ok\n
 '''
 import requests
-import headers
 from bs4 import BeautifulSoup
+from utils import logger as Logs, net
 '''
 uso de sessão para evitar reenvio de parametros
 ja que será feito grande número de conexões ao mesmo host
 '''
 session = requests.Session()
-session.headers.update(headers.HEADERS)
+session.headers.update(net.HEADERS)
 '''
 Para páginas pós 2018:
 https://www.uberlandia.mg.gov.br/2025/12/?post_type=diariooficial
@@ -88,6 +88,30 @@ def pdf_links_from_doc_list(documentos: list[str], ano: int, mes: int):
 def doc_name_from_link(link: str):
     return link.split('/')[7]
 
+'''
+    Realiza o download dos arquivos a partir da lista de links
+    gerada pela pdf_links_from_doc_list()
+'''
+def download_pdfs(links: list[str]):
+    lastDownloadDocName = ''
+    try:
+        for link in links:
+            docName = doc_name_from_link(link)
+            with session.get(link, stream=True, timeout=30) as req:
+                Logs.log(f'GET: {docName}')
+                if req.status_code != 200:
+                    Logs.log(f"Falha no GET: status {req.status_code}")
+                else:
+                    with open('downloads/' + docName, 'wb') as file:
+                        for chunk in req.iter_content(chunk_size=net.CHUNK_SIZE):
+                            file.write(chunk)
+                        Logs.log(f'{docName} salvo.')
+                        lastDownloadDocName = docName
+    except Exception as ex:
+        Logs.log(f"Erro no download: {ex}")
+    finally:
+        Logs.log("Download concluído")
+    return lastDownloadDocName
 
 #=====================================Funções que serão substituidas===================================
 
