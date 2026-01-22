@@ -58,12 +58,12 @@ def create_tbl_last_ano_mes_download(dbCon: sqlite3.Connection):
                                     (
                                     id INTEGER PRIMARY KEY,
                                     ano INTEGER NOT NULL CHECK(ano > 0),
-                                    mes INTEGER NOT NULL CHECK(mes > 0 AND mes <= 12)
+                                    mes INTEGER NOT NULL CHECK(mes > 0 AND mes <= 12),
                                     last_doc TEXT
                                     )
                                 """
     sqlInitAnoMesDownload = """
-                                INSERT INTO last_ano_mes_download (id, ano, mes)
+                                INSERT INTO last_ano_mes_download (id, ano, mes, last_doc)
                                 VALUES (1, 2015, 1, 'x.pdf')
                                 """
     cursor = dbCon.cursor()

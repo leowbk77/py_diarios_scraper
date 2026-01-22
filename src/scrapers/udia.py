@@ -78,7 +78,12 @@ def mount_pagina_url(ano: int, mes: int):
     Retorna a lista de links dos pdfs a partir da lista gerada em obter_docs()
 '''
 def pdf_links_from_doc_list(documentos: list[str], ano: int, mes: int):
-    baseUrl = 'https://docs.uberlandia.mg.gov.br/wp-content/uploads/' + ano + '/' + mes + '/'
+    anoUrl = str(ano)
+    if mes < 10:
+        mesUrl = '0' + str(mes)
+    else:
+        mesUrl = str(mes)
+    baseUrl = 'https://docs.uberlandia.mg.gov.br/wp-content/uploads/' + anoUrl + '/' + mesUrl + '/'
     links = []
     for documento in documentos:
         urlPdf = baseUrl + documento[7:] + '.pdf'
@@ -97,7 +102,7 @@ def download_pdfs(links: list[str]):
     try:
         for link in links:
             docName = doc_name_from_link(link)
-            with session.get(link, stream=True, timeout=30) as req:
+            with session.get(link, stream=True, timeout=27) as req:
                 Logs.log(f'GET: {docName}')
                 if req.status_code != 200:
                     Logs.log(f"Falha no GET: status {req.status_code}")
@@ -112,6 +117,30 @@ def download_pdfs(links: list[str]):
     finally:
         Logs.log("Download concluído")
     return lastDownloadDocName
+
+'''
+    Funçao que executa o fluxo de download
+'''
+def fluxo_download(ano: int, mes: int):
+    Logs.log('Iniciando fluxo de obtencao dos links dos pdfs')
+    try:
+        paginaURL = mount_pagina_url(ano, mes)
+        Logs.log(f"Link inicial de pagina obtido: {paginaURL}")
+        docsLinks = []
+        while(paginaURL is not None):
+            pagina = obter_pagina(paginaURL)
+            Logs.log('Pagina obtida, obtendo lista de documentos...')
+            for documento in obter_docs(pagina):
+                docsLinks.append(documento)
+            Logs.log('Documentos obtidos, obtendo proxima página...')
+            paginaURL = proxima_pagina(pagina)
+            Logs.log(f"Proxima pagina: {str(paginaURL)}")
+        Logs.log(f'Lista de documentos do mes {str(mes)} obtida, gerando links de pdf...')
+        pdfLinks = pdf_links_from_doc_list(docsLinks, ano, mes)
+    except Exception as ex:
+        Logs.log(f"Erro no fluxo: {ex}")
+    Logs.log('Iniciando o download a partir da lista de pdfs obtida...')
+    return download_pdfs(pdfLinks)
 
 #=====================================Funções que serão substituidas===================================
 
