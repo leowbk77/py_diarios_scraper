@@ -129,6 +129,53 @@ def index_file(filePath: str, link: str, ano: int, mes: int, docName: str):
     db.close()
 
 '''
+    Salva o arquivo obtido no request
+'''
+def save_file(path: str, request: requests.Response):
+    with open(path, 'wb') as file:
+        for chunk in request.iter_content(chunk_size=net.CHUNK_SIZE):
+            file.write(chunk)
+
+'''
+    Tenta obter o link de uma resposta que veio quebrada.
+'''
+def find_link_on_html(htmlPath: str):
+    stringFound = ''
+    with open(htmlPath, 'rt', encoding='utf-8') as file:
+        html = file.read()
+        startPos = html.find("window.location=\"https://docs.uberlandia.mg.gov.br/wp-content/uploads/")
+        endPos = html.find(';', startPos)
+        stringFound = html[startPos:endPos]
+    return stringFound[17:-1]
+
+'''
+    Funcao que refaz o link de acesso para os arquivos que vem quebrados
+'''
+def rebuild_pdf_link(docName: str, ano: int):
+    baseUrl = "https://www.uberlandia.mg.gov.br/"
+    if ano >= 2018:
+        baseUrl = baseUrl + 'diariooficial/edicao-'
+    else:
+        baseUrl = baseUrl + 'diario_oficial/edicao-'
+    return f"{baseUrl}{docName.lower()[:-4]}"
+
+'''
+    Funcao que tenta reobter o arquivo que está com link quebrado
+'''
+def retry_get_pdf(link: str, docLocalPath: str):
+    pdfFileName = docLocalPath[:-5]
+    with session.get(link, stream=True, timeout=27) as get:
+        save_file(docLocalPath, get)
+    link = find_link_on_html(docLocalPath)
+    with session.get(link, stream=True, timeout=27) as req:
+        if req.status_code != 200:
+            Logs.log(f"Falha no GET: status {req.status_code}")
+        else:
+            save_file(pdfFileName, req)
+    return pdfFileName
+
+
+'''
     Realiza o download dos arquivos a partir da lista de links
     gerada pela pdf_links_from_doc_list()
     e indexa.
@@ -139,20 +186,24 @@ def download_and_index_pdfs(links: list[str]):
             docName = doc_name_from_link(link)
             docAno, docMes = ano_mes_from_pdf_link(link)
             docLocalPath = f"{FILESDIR}/{docName}"
+            Logs.log(f'GET: {docName}')
             with session.get(link, stream=True, timeout=27) as req:
-                Logs.log(f'GET: {docName}')
                 if req.status_code != 200:
                     Logs.log(f"Falha no GET: status {req.status_code}")
                 else:
                     if is_pdf(req.headers.get('content-type')):
+                        #criar uma funcao
                         Logs.log('PDF obtido - salvando e indexando.')
-                        with open(docLocalPath, 'wb') as file:
-                            for chunk in req.iter_content(chunk_size=net.CHUNK_SIZE):
-                                file.write(chunk)
-                            Logs.log(f'{docName} salvo. Indexando...')
+                        save_file(docLocalPath, req)
+                        Logs.log(f'{docName} salvo. Indexando...')
                         index_file(docLocalPath, link, docAno, docMes, docName)
                     else:
-                        Logs.log(f"Erro no download: Arquivo não é um pdf")
+                        # faltando implementacao
+                        Logs.log(f"Falha: Arquivo não é um pdf - Possvel link quebrado - tentando reobter link")
+                        #save_file(f"{docLocalPath}.html", req)
+                        #Logs.log(f"{docName}.html salvo.")
+                        #realizar download novamente
+                        retry_get_pdf(rebuild_pdf_link(docName, docAno), f"{docLocalPath}.html")
     except Exception as ex:
         Logs.log(f"Erro no download and Index: {ex}")
         raise
