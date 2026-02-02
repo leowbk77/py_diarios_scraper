@@ -8,6 +8,7 @@ para controle de download e Full Text Search
 '''
 
 import sqlite3
+import os.path as Dir
 
 def init(db: str) -> sqlite3.Connection:
     return sqlite3.connect(db)
@@ -76,3 +77,6 @@ def text_search(text: str, dbCon: sqlite3.Connection):
             """
     cursor = dbCon.cursor()
     return cursor.execute(sql, (text))
+
+def db_exists(dbName: str):
+    return Dir.isfile(f"./data/{dbName}.db")

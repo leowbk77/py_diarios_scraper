@@ -110,7 +110,16 @@ def doc_name_from_link(link: str):
     return link.split('/')[7]
 
 '''
+    Verifica se o download foi de um pdf
+'''
+def is_pdf(content_type: str | None):
+    if mimetypes.guess_extension(content_type) == '.pdf':
+        return True
+    return False
+
+'''
     faz o index no db
+    falta logs
 '''
 def index_file(filePath: str, link: str, ano: int, mes: int, docName: str):
     db = dbUdi.init(DATABASE)
@@ -118,14 +127,6 @@ def index_file(filePath: str, link: str, ano: int, mes: int, docName: str):
     Indx.index_file(filePath, db, docId)
     dbUdi.update_doc_indexado(docId, db)
     db.close()
-
-'''
-    Verifica se o download foi de um pdf
-'''
-def is_pdf(content_type: str | None):
-    if mimetypes.guess_extension(content_type) == '.pdf':
-        return True
-    return False
 
 '''
     Realiza o download dos arquivos a partir da lista de links
@@ -151,7 +152,7 @@ def download_and_index_pdfs(links: list[str]):
                             Logs.log(f'{docName} salvo. Indexando...')
                         index_file(docLocalPath, link, docAno, docMes, docName)
                     else:
-                        Logs.log(f"Erro no download: Resposta não é um pdf")
+                        Logs.log(f"Erro no download: Arquivo não é um pdf")
     except Exception as ex:
         Logs.log(f"Erro no download and Index: {ex}")
         raise

@@ -6,6 +6,15 @@ parser_conf.py
 Script de configuração do parser de argumentos do scraper
 '''
 import argparse
+from datetime import date
+
+ANOMIN = 2015
+ANOMAX = date.today().year
+
+UDI = 'udi'
+MONTE = 'monte'
+CIDADES = [UDI, MONTE]
+
 parser = argparse.ArgumentParser(
                     prog='Diarios Scraper',
                     description='Scraper para os documentos dos diários oficiais')
@@ -17,8 +26,8 @@ parser.add_argument('--listc', '-lc',
 parser.add_argument('--cidade', '-c',  
                     nargs=1,
                     type=str,
-                    default='udi', 
-                    choices=['udi', 'monte'], 
+                    default=UDI, 
+                    choices=CIDADES, 
                     help='Seleciona a cidade')
 
 parser.add_argument('--init', '-i', 
@@ -43,3 +52,9 @@ def list_cidades():
     print("CIDADE\t\tIDENTIFICADOR")
     print("Uberlândia\tudi")
     print("Monte Carmelo\tmonte")
+
+def ano_mes_valid(ano: int, mes: int):
+    if ano >= ANOMIN and ano <= ANOMAX:
+        if mes > 0  and mes <= 12:
+            return True
+    return False
