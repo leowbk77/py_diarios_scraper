@@ -17,7 +17,7 @@ def init():
     if database.db_exists(f"{arg.cidade}"):
         Logs.log("Database Encontrado - pulando etapa de criacao")
     else:
-        Logs.log("Database nao iniciado.")
+        Logs.log("Database nao encontrado.")
         Logs.log(f"Subindo db ./data/{arg.cidade}.db")
         db = database.init(f"data/{arg.cidade}.db")
         Logs.log('Criando tabelas')

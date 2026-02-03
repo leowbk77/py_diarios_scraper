@@ -36,10 +36,13 @@ def insert_into_tbl_docs(nmEdicao: str, caminho: str, ano: int, mes: int, indexa
             INSERT INTO docs (nm_edicao, caminho, ano, mes, indexado)
             VALUES (?,?,?,?,?)
             """
-    cursor = dbCon.cursor()
-    cursor.execute(sql, (nmEdicao, caminho, ano, mes, indexado))
-    docId = cursor.lastrowid
-    dbCon.commit()
+    try:
+        cursor = dbCon.cursor()
+        cursor.execute(sql, (nmEdicao, caminho, ano, mes, indexado))
+        docId = cursor.lastrowid
+        dbCon.commit()
+    except sqlite3.IntegrityError:
+        docId = -1
     return docId
 
 def create_tbl_docs_fts(dbCon: sqlite3.Connection):

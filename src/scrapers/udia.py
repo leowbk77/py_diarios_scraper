@@ -124,8 +124,11 @@ def is_pdf(content_type: str | None):
 def index_file(filePath: str, link: str, ano: int, mes: int, docName: str):
     db = dbUdi.init(DATABASE)
     docId = dbUdi.insert_into_tbl_docs(docName, link, ano, mes, False, db)
-    Indx.index_file(filePath, db, docId)
-    dbUdi.update_doc_indexado(docId, db)
+    if docId != (-1):
+        Indx.index_file(filePath, db, docId)
+        dbUdi.update_doc_indexado(docId, db)
+    else:
+        Logs.log(f"{docName} já possui uma entrada indexada.")
     db.close()
 
 '''
@@ -138,15 +141,18 @@ def save_file(path: str, request: requests.Response):
 
 '''
     Tenta obter o link de uma resposta que veio quebrada.
+    Retorna string vazia em caso de não encontrar o link
 '''
 def find_link_on_html(htmlPath: str):
-    stringFound = ''
+    link = ''
     with open(htmlPath, 'rt', encoding='utf-8') as file:
         html = file.read()
         startPos = html.find("window.location=\"https://docs.uberlandia.mg.gov.br/wp-content/uploads/")
         endPos = html.find(';', startPos)
-        stringFound = html[startPos:endPos]
-    return stringFound[17:-1]
+        if startPos != (-1):
+            link = html[startPos:endPos]
+            return link[17:-1]
+        return link
 
 '''
     Funcao que refaz o link de acesso para os arquivos que vem quebrados
@@ -156,24 +162,27 @@ def rebuild_pdf_link(docName: str, ano: int):
     if ano >= 2018:
         baseUrl = baseUrl + 'diariooficial/edicao-'
     else:
-        baseUrl = baseUrl + 'diario_oficial/edicao-'
+        baseUrl = baseUrl + 'diario-oficial/edicao-'
     return f"{baseUrl}{docName.lower()[:-4]}"
 
 '''
     Funcao que tenta reobter o arquivo que está com link quebrado
+    Retorna string vazia caso tenha falha
+    Retorna o link verdadeiro encontrado em caso de sucesso
 '''
-def retry_get_pdf(link: str, docLocalPath: str):
+def retry_get_pdf(pdfAccLink: str, docLocalPath: str):
     pdfFileName = docLocalPath[:-5]
-    with session.get(link, stream=True, timeout=27) as get:
+    with session.get(pdfAccLink, stream=True, timeout=27) as get:
         save_file(docLocalPath, get)
     link = find_link_on_html(docLocalPath)
-    with session.get(link, stream=True, timeout=27) as req:
-        if req.status_code != 200:
-            Logs.log(f"Falha no GET: status {req.status_code}")
-        else:
-            save_file(pdfFileName, req)
-    return pdfFileName
-
+    if link != '':
+        Logs.log("Link recuperado - Baixando e salvando pdf")
+        with session.get(link, stream=True, timeout=27) as req:
+            if req.status_code != 200:
+                Logs.log(f"Falha no GET: status {req.status_code}")
+            else:
+                save_file(pdfFileName, req)
+    return link
 
 '''
     Realiza o download dos arquivos a partir da lista de links
@@ -192,18 +201,20 @@ def download_and_index_pdfs(links: list[str]):
                     Logs.log(f"Falha no GET: status {req.status_code}")
                 else:
                     if is_pdf(req.headers.get('content-type')):
-                        #criar uma funcao
                         Logs.log('PDF obtido - salvando e indexando.')
                         save_file(docLocalPath, req)
                         Logs.log(f'{docName} salvo. Indexando...')
                         index_file(docLocalPath, link, docAno, docMes, docName)
+                        Logs.log(f'{docName} Indexado.\n=====================')
                     else:
-                        # faltando implementacao
-                        Logs.log(f"Falha: Arquivo não é um pdf - Possvel link quebrado - tentando reobter link")
-                        #save_file(f"{docLocalPath}.html", req)
-                        #Logs.log(f"{docName}.html salvo.")
-                        #realizar download novamente
-                        retry_get_pdf(rebuild_pdf_link(docName, docAno), f"{docLocalPath}.html")
+                        Logs.log(f"Falha: Arquivo não é um pdf - Possível link quebrado: tentando recuperar link")
+                        pdfLink = retry_get_pdf(rebuild_pdf_link(docName, docAno), f"{docLocalPath}.html")
+                        if pdfLink != '':
+                            Logs.log("Arquivo recuperado. Indexando...")
+                            index_file(docLocalPath, pdfLink, docAno, docMes, docName)
+                            Logs.log(f'{docName} Indexado.\n=====================')
+                        else:
+                            Logs.log(f"ERRO: Não foi possível recuperar o arquivo {docName}")
     except Exception as ex:
         Logs.log(f"Erro no download and Index: {ex}")
         raise
