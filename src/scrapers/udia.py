@@ -81,7 +81,7 @@ def ano_mes_from_pdf_link(link: str):
     Retorna a url da pagina para o scraping montada a partir do ano e mes
 '''
 def mount_pagina_url(ano: int, mes: int):
-    baseUrl = 'https://www.uberlandia.mg.gov.br' + '/' + str(ano) + '/' + str(mes) + '/' + '?post_type='
+    baseUrl = f"https://www.uberlandia.mg.gov.br/{ano}/{mes}/?post_type="
     if ano >= 2018:
         return baseUrl + 'diariooficial'
     return baseUrl + 'diario_oficial'
@@ -125,10 +125,13 @@ def index_file(filePath: str, link: str, ano: int, mes: int, docName: str):
     db = dbUdi.init(DATABASE)
     docId = dbUdi.insert_into_tbl_docs(docName, link, ano, mes, False, db)
     if docId != (-1):
-        Indx.index_file(filePath, db, docId)
+        Indx.index(filePath, db, docId)
         dbUdi.update_doc_indexado(docId, db)
     else:
         Logs.log(f"{docName} já possui uma entrada indexada.")
+        # Não garante que o arquivo tenha sido indexado
+        # Mas já impede que gere exception caso já tenha entrada no banco
+        # ----->Corrigir futuramente
     db.close()
 
 '''

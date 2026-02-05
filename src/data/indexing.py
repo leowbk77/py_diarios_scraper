@@ -11,7 +11,7 @@ from pypdf import PdfReader
 '''
 
 '''
-def index_file(filePath: str, db: sqlite3.Connection, docId: int):
+def index(filePath: str, db: sqlite3.Connection, docId: int):
     pdf = PdfReader(filePath)
     pageIndx = 1
     for page in pdf.pages:
