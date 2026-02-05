@@ -21,7 +21,8 @@ def create_tbl_docs(dbCon: sqlite3.Connection):
                 nm_edicao TEXT UNIQUE NOT NULL,
                 caminho TEXT NOT NULL,
                 ano INTEGER NOT NULL,
-                mes INTERGER NOT NULL,
+                mes INTEGER NOT NULL,
+                dia INTEGER NOT NULL,
                 indexado BOOLEAN NOT NULL
                 )
             """
@@ -29,16 +30,16 @@ def create_tbl_docs(dbCon: sqlite3.Connection):
     cursor.execute(sql)
     dbCon.commit()
 
-def insert_into_tbl_docs(nmEdicao: str, caminho: str, ano: int, mes: int, indexado: bool, dbCon: sqlite3.Connection) -> int | None:
+def insert_into_tbl_docs(nmEdicao: str, caminho: str, ano: int, mes: int, dia: int, indexado: bool, dbCon: sqlite3.Connection) -> int | None:
     # falta tratamento de erro para arquivos de mesmo nome
     # colocar um try catch para sqlite3.IntegrityError: UNIQUE constraint failed: docs.nm_edicao
     sql = """
-            INSERT INTO docs (nm_edicao, caminho, ano, mes, indexado)
-            VALUES (?,?,?,?,?)
+            INSERT INTO docs (nm_edicao, caminho, ano, mes, dia, indexado)
+            VALUES (?,?,?,?,?,?)
             """
     try:
         cursor = dbCon.cursor()
-        cursor.execute(sql, (nmEdicao, caminho, ano, mes, indexado))
+        cursor.execute(sql, (nmEdicao, caminho, ano, mes, dia, indexado))
         docId = cursor.lastrowid
         dbCon.commit()
     except sqlite3.IntegrityError:

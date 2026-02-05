@@ -129,9 +129,9 @@ def is_pdf(content_type: str | None):
     faz o index no db
     falta logs
 '''
-def index_file(filePath: str, link: str, ano: int, mes: int, docName: str):
+def index_file(filePath: str, link: str, ano: int, mes: int, dia: int, docName: str):
     db = dbUdi.init(DATABASE)
-    docId = dbUdi.insert_into_tbl_docs(docName, link, ano, mes, False, db)
+    docId = dbUdi.insert_into_tbl_docs(docName, link, ano, mes, dia, False, db)
     if docId != (-1):
         Indx.index(filePath, db, docId)
         dbUdi.update_doc_indexado(docId, db)
@@ -205,7 +205,7 @@ def download_and_index_pdfs(links: list[(str,str)]):
         for link, docData in links:
             docName = doc_name_from_link(link)
             docAno, docMes = ano_mes_from_pdf_link(link)
-            docDia = docData[:2]
+            docDia = int(docData[:2])
             docLocalPath = f"{FILESDIR}/{docName}"
             Logs.log(f'GET: {docName}')
             with session.get(link, stream=True, timeout=27) as req:
@@ -216,14 +216,14 @@ def download_and_index_pdfs(links: list[(str,str)]):
                         Logs.log('PDF obtido - salvando e indexando.')
                         save_file(docLocalPath, req)
                         Logs.log(f'{docName} salvo. Indexando...')
-                        index_file(docLocalPath, link, docAno, docMes, docName)
+                        index_file(docLocalPath, link, docAno, docMes, docDia, docName)
                         Logs.log(f'{docName} Indexado.\n=====================')
                     else:
                         Logs.log(f"Falha: Arquivo não é um pdf - Possível link quebrado: tentando recuperar link")
                         pdfLink = retry_get_pdf(rebuild_pdf_link(docName, docAno), f"{docLocalPath}.html")
                         if pdfLink != '':
                             Logs.log("Arquivo recuperado. Indexando...")
-                            index_file(docLocalPath, pdfLink, docAno, docMes, docName)
+                            index_file(docLocalPath, pdfLink, docAno, docMes, docDia, docName)
                             Logs.log(f'{docName} Indexado.\n=====================')
                         else:
                             Logs.log(f"ERRO: Não foi possível recuperar o arquivo {docName}")
