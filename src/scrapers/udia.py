@@ -46,13 +46,16 @@ def proxima_pagina(paginaAtual: BeautifulSoup):
     return proxima.get('href')
 
 '''
-    Retorna uma lista com os nomes dos documentos disponíveis na página
+    Retorna uma lista com os nomes e datas dos documentos disponíveis na página
+    [(nome,data),(nome,data)]
 '''
-def obter_docs(pagina: BeautifulSoup):
-    diarios = pagina.find_all("h3", class_="elementor-post__title")
+def obter_docs(pagina: BeautifulSoup) -> list[(str,str)]:
+    diarios = pagina.find_all("div", class_="elementor-post__text")
     docs = []
-    for documentos in diarios:
-        docs.append(str(documentos.a.string.strip()))
+    for documento in diarios:
+        nome = documento.a.string.strip()
+        data = documento.span.string.strip()
+        docs.append((nome, data))
     return docs
 
 '''
@@ -81,25 +84,30 @@ def ano_mes_from_pdf_link(link: str):
     Retorna a url da pagina para o scraping montada a partir do ano e mes
 '''
 def mount_pagina_url(ano: int, mes: int):
-    baseUrl = f"https://www.uberlandia.mg.gov.br/{ano}/{mes}/?post_type="
+    if mes < 10:
+        mesUrl = f"0{mes}"
+    else:
+        mesUrl = str(mes)
+    baseUrl = f"https://www.uberlandia.mg.gov.br/{ano}/{mesUrl}/?post_type="
     if ano >= 2018:
         return baseUrl + 'diariooficial'
     return baseUrl + 'diario_oficial'
 
 '''
     Retorna a lista de links dos pdfs a partir da lista gerada em obter_docs()
+    juntamente com a data de cada doc para salvar posteriormente na indexação
+    [(link, data),(link, data)]
 '''
-def pdf_links_from_doc_list(documentos: list[str], ano: int, mes: int):
-    anoUrl = str(ano)
+def pdf_links_from_doc_list(documentos: list[(str,str)], ano: int, mes: int) -> list[(str,str)]:
     if mes < 10:
-        mesUrl = '0' + str(mes)
+        mesUrl = f"0{mes}"
     else:
         mesUrl = str(mes)
-    baseUrl = 'https://docs.uberlandia.mg.gov.br/wp-content/uploads/' + anoUrl + '/' + mesUrl + '/'
+    baseUrl = f"https://docs.uberlandia.mg.gov.br/wp-content/uploads/{ano}/{mesUrl}/"
     links = []
-    for documento in documentos:
-        urlPdf = baseUrl + documento[7:] + '.pdf'
-        links.append(urlPdf)
+    for nomeDoc, dataDoc in documentos:
+        urlPdf = baseUrl + nomeDoc[7:] + '.pdf'
+        links.append((urlPdf, dataDoc))
     return links
 
 '''
@@ -192,11 +200,12 @@ def retry_get_pdf(pdfAccLink: str, docLocalPath: str):
     gerada pela pdf_links_from_doc_list()
     e indexa.
 '''
-def download_and_index_pdfs(links: list[str]):
+def download_and_index_pdfs(links: list[(str,str)]):
     try:
-        for link in links:
+        for link, docData in links:
             docName = doc_name_from_link(link)
             docAno, docMes = ano_mes_from_pdf_link(link)
+            docDia = docData[:2]
             docLocalPath = f"{FILESDIR}/{docName}"
             Logs.log(f'GET: {docName}')
             with session.get(link, stream=True, timeout=27) as req:
@@ -243,7 +252,7 @@ def fluxo_download(ano: int, mes: int):
             Logs.log(f"Proxima pagina: {str(paginaURL)}")
         Logs.log(f'Lista de documentos do mes {str(mes)} obtida, gerando links de pdf...')
         pdfLinks = pdf_links_from_doc_list(docsLinks, ano, mes)
+        Logs.log('Iniciando o download a partir da lista de pdfs obtida...')
+        return download_and_index_pdfs(pdfLinks)
     except Exception as ex:
         Logs.log(f"Erro no fluxo: {ex}")
-    Logs.log('Iniciando o download a partir da lista de pdfs obtida...')
-    return download_and_index_pdfs(pdfLinks)
