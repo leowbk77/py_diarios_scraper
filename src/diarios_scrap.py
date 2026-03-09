@@ -12,14 +12,21 @@ from utils import logger as Logs, scraper_parser as Args
 arg = Args.parser.parse_args()
 Logs.init_log()
 
+def obter_cidade(argCidade: str | list[str]):
+    if argCidade == Args.UDI:
+        return argCidade
+    else: 
+        return argCidade[0]
+
 def init():
-    Logs.log(f"Tentando Iniciar database: {arg.cidade}")
-    if database.db_exists(f"{arg.cidade}"):
+    cidade = obter_cidade(arg.cidade)
+    Logs.log(f"Tentando Iniciar database: {cidade}")
+    if database.db_exists(f"{cidade}"):
         Logs.log("Database Encontrado - pulando etapa de criacao")
     else:
         Logs.log("Database nao encontrado.")
-        Logs.log(f"Subindo db ./data/{arg.cidade}.db")
-        db = database.init(f"data/{arg.cidade}.db")
+        Logs.log(f"Subindo db ./data/{cidade}.db")
+        db = database.init(f"data/{cidade}.db")
         Logs.log('Criando tabelas')
         database.create_tbl_docs(db)
         database.create_tbl_docs_fts(db)
@@ -29,7 +36,8 @@ def init():
 def download():
     if arg.ano and arg.mes:
         if Args.ano_mes_valid(arg.ano[0], arg.mes[0]):
-            if arg.cidade == Args.UDI:
+            cidade = obter_cidade(arg.cidade)
+            if cidade == Args.UDI :
                 Udia.fluxo_download(arg.ano[0], arg.mes[0])
             else:
                 #faltando implementacao de outras cidades
