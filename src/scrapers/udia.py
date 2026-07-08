@@ -6,9 +6,9 @@ Léo MF.
 Scraper para o site dos diários oficiais da prefeitura de Uberlândia
 '''
 import requests
-import mimetypes
 from bs4 import BeautifulSoup
 from data import indexing as Indx, database as dbUdi
+from utils.helpers import is_pdf
 from utils import logger as Logs, net
 '''
 uso de sessão para evitar reenvio de parametros
@@ -116,14 +116,6 @@ def pdf_links_from_doc_list(documentos: list[(str,str)], ano: int, mes: int) -> 
 '''
 def doc_name_from_link(link: str):
     return link.split('/')[7]
-
-'''
-    Verifica se o download foi de um pdf
-'''
-def is_pdf(content_type: str | None):
-    if mimetypes.guess_extension(content_type) == '.pdf':
-        return True
-    return False
 
 '''
     faz o index no db
