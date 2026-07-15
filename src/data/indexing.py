@@ -6,10 +6,9 @@ indexing.py
 Módulo que cuida da indexação dos arquivos pdf no banco para a busca textual
 '''
 import sqlite3
-import datetime
 from data import database
 from pypdf import PdfReader
-from utils.helpers import is_pdf_ext, get_docname_from_uri
+from utils.helpers import is_pdf_ext, get_docname_from_uri, format_url_base
 from utils import logger as Logs
 
 '''
@@ -27,13 +26,11 @@ def index(filePath: str, db: sqlite3.Connection, docId: int):
 Indexação do documento local
 '''
 def index_local(filePath: str, dbName: str, urlBase: str, ano: int, mes: int, dia: int):
-    db = database.init(dbName)
-    docName = get_docname_from_uri(filePath)
+    db = database.init(f"./data/{dbName}.db")
     if is_pdf_ext(filePath):
-        #uso futuro com a alteracao do banco
-        docDate = datetime.datetime(ano, mes, dia)
-        #uso futuro com a alteracao do banco
-        docId = database.insert_into_tbl_docs(docName, f"{urlBase}/{docName}", ano, mes, dia, False, db)
+        docName = get_docname_from_uri(filePath)
+        Logs.log(f"Arquivo com extencao pdf - docName obtido: {docName} - Inserindo na base e indexando paginas...")
+        docId = database.insert_into_tbl_docs(docName, f"{format_url_base(urlBase)}/{docName}", ano, mes, dia, db)
         index(filePath, db, docId)
-    else: 
-        Logs.log("Arquivo não é pdf.")
+    else:
+        Logs.log("Arquivo não é pdf. Indexacao não realizada.")
