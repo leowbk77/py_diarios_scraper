@@ -8,7 +8,7 @@ Scraper para o site dos diários oficiais da prefeitura de Uberlândia
 import requests
 from bs4 import BeautifulSoup
 from data import indexing as Indx, database as dbUdi
-from utils.helpers import is_pdf
+from utils.helpers import is_pdf, format_dia_mes_str
 from utils import logger as Logs, net
 '''
 uso de sessão para evitar reenvio de parametros
@@ -84,10 +84,7 @@ def ano_mes_from_pdf_link(link: str):
     Retorna a url da pagina para o scraping montada a partir do ano e mes
 '''
 def mount_pagina_url(ano: int, mes: int):
-    if mes < 10:
-        mesUrl = f"0{mes}"
-    else:
-        mesUrl = str(mes)
+    mesUrl = format_dia_mes_str(mes)
     baseUrl = f"https://www.uberlandia.mg.gov.br/{ano}/{mesUrl}/?post_type="
     if ano >= 2018:
         return baseUrl + 'diariooficial'
@@ -123,12 +120,11 @@ def doc_name_from_link(link: str):
 '''
 def index_file(filePath: str, link: str, ano: int, mes: int, dia: int, docName: str):
     db = dbUdi.init(DATABASE)
-    docId = dbUdi.insert_into_tbl_docs(docName, link, ano, mes, dia, False, db)
+    docId = dbUdi.insert_into_tbl_docs(docName, link, ano, mes, dia, db)
     if docId != (-1):
         Indx.index(filePath, db, docId)
-        dbUdi.update_doc_indexado(docId, db)
     else:
-        Logs.log(f"{docName} já possui uma entrada indexada.")
+        Logs.log(f"{docName} já possui uma entrada indexada ou erro de indexacao ocorreu.")
         # Não garante que o arquivo tenha sido indexado
         # Mas já impede que gere exception caso já tenha entrada no banco
         # ----->Corrigir futuramente
@@ -208,15 +204,18 @@ def download_and_index_pdfs(links: list[(str,str)]):
                         Logs.log('PDF obtido - salvando e indexando.')
                         save_file(docLocalPath, req)
                         Logs.log(f'{docName} salvo. Indexando...')
-                        index_file(docLocalPath, link, docAno, docMes, docDia, docName)
-                        Logs.log(f'{docName} Indexado.\n=====================')
+                        try:
+                            index_file(docLocalPath, link, docAno, docMes, docDia, docName)
+                        except Exception as ex:
+                            Logs.log(f"Erro na indexacao do {docName} - {ex}")
+                        Logs.log(f'{docName} Finalizado.\n=====================')
                     else:
                         Logs.log(f"Falha: Arquivo não é um pdf - Possível link quebrado: tentando recuperar link")
                         pdfLink = retry_get_pdf(rebuild_pdf_link(docName, docAno), f"{docLocalPath}.html")
                         if pdfLink != '':
                             Logs.log("Arquivo recuperado. Indexando...")
                             index_file(docLocalPath, pdfLink, docAno, docMes, docDia, docName)
-                            Logs.log(f'{docName} Indexado.\n=====================')
+                            Logs.log(f'{docName} Finalizado.\n=====================')
                         else:
                             Logs.log(f"ERRO: Não foi possível recuperar o arquivo {docName}")
     except Exception as ex:

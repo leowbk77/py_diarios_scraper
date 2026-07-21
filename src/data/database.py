@@ -9,6 +9,8 @@ para controle de download e Full Text Search
 
 import sqlite3
 import os.path as Dir
+import utils.logger as Logs
+from utils.helpers import format_sqlite_date_str
 
 def init(db: str) -> sqlite3.Connection:
     return sqlite3.connect(db)
@@ -16,33 +18,36 @@ def init(db: str) -> sqlite3.Connection:
 def create_tbl_docs(dbCon: sqlite3.Connection):
     sql = """
             CREATE TABLE IF NOT EXISTS docs
-                (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                (id INTEGER PRIMARY KEY AUTOINCREMENT,
                 nm_edicao TEXT UNIQUE NOT NULL,
                 caminho TEXT NOT NULL,
-                ano INTEGER NOT NULL,
-                mes INTEGER NOT NULL,
-                dia INTEGER NOT NULL,
-                indexado BOOLEAN NOT NULL
-                )
+                dt_edicao TEXT NOT NULL)
+            """
+    sqlNovo = """
+            CREATE TABLE IF NOT EXISTS docs
+                (id INTEGER PRIMARY KEY AUTOINCREMENT,
+                nm_edicao TEXT UNIQUE NOT NULL,
+                caminho TEXT NOT NULL,
+                dt_edicao TEXT NOT NULL)
             """
     cursor = dbCon.cursor()
     cursor.execute(sql)
     dbCon.commit()
 
-def insert_into_tbl_docs(nmEdicao: str, caminho: str, ano: int, mes: int, dia: int, indexado: bool, dbCon: sqlite3.Connection) -> int | None:
-    # falta tratamento de erro para arquivos de mesmo nome
-    # colocar um try catch para sqlite3.IntegrityError: UNIQUE constraint failed: docs.nm_edicao
+def insert_into_tbl_docs(nmEdicao: str, caminho: str, ano: int, mes: int, dia: int, dbCon: sqlite3.Connection) -> int | None:
+    dt_edicao = format_sqlite_date_str(ano, mes, dia)
+    
     sql = """
-            INSERT INTO docs (nm_edicao, caminho, ano, mes, dia, indexado)
-            VALUES (?,?,?,?,?,?)
+            INSERT INTO docs (nm_edicao, caminho, dt_edicao)
+            VALUES (?,?,?)
             """
     try:
         cursor = dbCon.cursor()
-        cursor.execute(sql, (nmEdicao, caminho, ano, mes, dia, indexado))
+        cursor.execute(sql, (nmEdicao, caminho, dt_edicao))
         docId = cursor.lastrowid
         dbCon.commit()
-    except sqlite3.IntegrityError:
+    except sqlite3.IntegrityError as err:
+        Logs.log(f"ERRO: {err}")
         docId = -1
     return docId
 
@@ -63,17 +68,6 @@ def insert_into_tbl_docs_fts(docId: int, page: int, content: str, dbCon: sqlite3
     cursor = dbCon.cursor()
     cursor.execute(sql, (docId, page, content))
     dbCon.commit()
-
-def update_doc_indexado(docId: int, dbCon: sqlite3.Connection):
-    sql = """
-            UPDATE docs
-            SET indexado = TRUE
-            WHERE id = ?
-            """
-    cursor = dbCon.cursor()
-    cursor.execute(sql, [docId])
-    dbCon.commit()
-    return True
     
 def text_search(text: str, dbCon: sqlite3.Connection):
     sql = """

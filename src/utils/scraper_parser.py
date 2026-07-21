@@ -13,7 +13,8 @@ ANOMAX = date.today().year
 
 UDI = 'udi'
 MONTE = 'monte'
-CIDADES = [UDI, MONTE]
+TESTE = 'teste'
+CIDADES = [UDI, MONTE, TESTE]
 
 parser = argparse.ArgumentParser(
                     prog='Diarios Scraper',
@@ -44,17 +45,40 @@ parser.add_argument('--mes', '-m',
                     type=int, 
                     help='Flag que identifica o mes de inicialização, precisa ser usada com a --init')
 
-parser.add_argument('--download', '-d', 
+parser.add_argument('--dia', '-d',
+                    nargs=1,
+                    type=int,
+                    help='Flag que identifica o dia do documento a ser indexado, usado com a --local')
+
+parser.add_argument('--download', '-dl', 
                     action='store_true', 
                     help='Flag que indica que deve-se realizar o download dos docs')
+
+parser.add_argument('--local', '-l',
+                    action='store_true',
+                    help='Flag que indica que deve-se realizar indexação de arquivos locais')
+
+parser.add_argument('--arquivo', '-p',
+                    nargs=1,
+                    type=str,
+                    help='Caminho local do arquivo a ser indexado')
+
+parser.add_argument('--acesso', '-url', 
+                    nargs=1, 
+                    type=str, 
+                    help='Caminho de rede onde o arquivo vai ser acessado pelos leitores')
 
 def list_cidades():
     print("CIDADE\t\tIDENTIFICADOR")
     print("Uberlândia\tudi")
-    print("Monte Carmelo\tmonte")
 
 def ano_mes_valid(ano: int, mes: int):
     if ano >= ANOMIN and ano <= ANOMAX:
         if mes > 0  and mes <= 12:
             return True
+    return False
+
+def dia_valid(dia: int):
+    if dia >= 1 and dia <= 31:
+        return True
     return False
