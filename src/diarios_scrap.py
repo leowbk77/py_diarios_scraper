@@ -50,11 +50,11 @@ def local():
     if arg.ano and arg.mes and arg.dia and arg.cidade and arg.arquivo and arg.acesso:
         if Args.ano_mes_valid(arg.ano[0], arg.mes[0]) and Args.dia_valid(arg.dia[0]):
             Logs.log(f"Iniciando fluxo de indexacao para arquivo {arg.arquivo[0]}")
-            indexing.index_local(arg.arquivo[0], 
-                                arg.cidade[0], 
-                                arg.acesso[0], 
-                                arg.ano[0], 
-                                arg.mes[0], 
+            indexing.index_local(arg.arquivo[0],
+                                arg.cidade[0],
+                                arg.acesso[0],
+                                arg.ano[0],
+                                arg.mes[0],
                                 arg.dia[0])
             Logs.log(f"Indexado: {arg.arquivo[0]} em {arg.cidade[0]}.db")
         else:

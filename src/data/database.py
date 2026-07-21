@@ -21,9 +21,6 @@ def create_tbl_docs(dbCon: sqlite3.Connection):
                 (id INTEGER PRIMARY KEY AUTOINCREMENT,
                 nm_edicao TEXT UNIQUE NOT NULL,
                 caminho TEXT NOT NULL,
-                ano INTEGER NOT NULL,
-                mes INTEGER NOT NULL,
-                dia INTEGER NOT NULL,
                 dt_edicao TEXT NOT NULL)
             """
     sqlNovo = """
@@ -41,12 +38,12 @@ def insert_into_tbl_docs(nmEdicao: str, caminho: str, ano: int, mes: int, dia: i
     dt_edicao = format_sqlite_date_str(ano, mes, dia)
     
     sql = """
-            INSERT INTO docs (nm_edicao, caminho, ano, mes, dia, dt_edicao)
-            VALUES (?,?,?,?,?,?)
+            INSERT INTO docs (nm_edicao, caminho, dt_edicao)
+            VALUES (?,?,?)
             """
     try:
         cursor = dbCon.cursor()
-        cursor.execute(sql, (nmEdicao, caminho, ano, mes, dia, dt_edicao))
+        cursor.execute(sql, (nmEdicao, caminho, dt_edicao))
         docId = cursor.lastrowid
         dbCon.commit()
     except sqlite3.IntegrityError as err:
