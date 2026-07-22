@@ -47,6 +47,9 @@ def index_local(filePath: str, dbName: str, urlBase: str, ano: int, mes: int, di
         docName = get_docname_from_uri(filePath)
         Logs.log(f"Arquivo com extencao pdf - docName obtido: {docName} - Inserindo na base e indexando paginas...")
         docId = database.insert_into_tbl_docs(docName, f"{format_url_base(urlBase)}/{docName}", ano, mes, dia, db)
-        index(filePath, db, docId)
+        if docId != (-1):
+            index(filePath, db, docId)
+        else:
+            Logs.log(f"{docName} já possui uma entrada indexada ou erro de indexacao ocorreu.")
     else:
         Logs.log("Arquivo não é pdf. Indexacao não realizada.")
