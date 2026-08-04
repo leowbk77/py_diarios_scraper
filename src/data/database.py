@@ -23,13 +23,6 @@ def create_tbl_docs(dbCon: sqlite3.Connection):
                 caminho TEXT NOT NULL,
                 dt_edicao TEXT NOT NULL)
             """
-    sqlNovo = """
-            CREATE TABLE IF NOT EXISTS docs
-                (id INTEGER PRIMARY KEY AUTOINCREMENT,
-                nm_edicao TEXT UNIQUE NOT NULL,
-                caminho TEXT NOT NULL,
-                dt_edicao TEXT NOT NULL)
-            """
     cursor = dbCon.cursor()
     cursor.execute(sql)
     dbCon.commit()
@@ -54,8 +47,8 @@ def insert_into_tbl_docs(nmEdicao: str, caminho: str, ano: int, mes: int, dia: i
 def create_tbl_docs_fts(dbCon: sqlite3.Connection):
     sql = """
             CREATE VIRTUAL TABLE IF NOT EXISTS docs_fts
-            USING fts5(doc_id, pagina, conteudo)
-            """
+            USING fts5(doc_id, pagina, conteudo, tokenize = "unicode61 remove_diacritics 0")
+            """ # tokenize = "unicode61 remove_diacritics 0" para fazer diferenciação na tokenização de ç/c, á/a ...
     cursor = dbCon.cursor()
     cursor.execute(sql)
     dbCon.commit()
