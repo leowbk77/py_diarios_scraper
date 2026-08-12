@@ -10,6 +10,7 @@ from bs4 import BeautifulSoup
 from data import indexing as Indx, database as dbUdi
 from utils.helpers import is_pdf, format_dia_mes_str
 from utils import logger as Logs, net
+from pathlib import Path
 '''
 uso de sessão para evitar reenvio de parametros
 ja que será feito grande número de conexões ao mesmo host
@@ -134,9 +135,13 @@ def index_file(filePath: str, link: str, ano: int, mes: int, dia: int, docName: 
     Salva o arquivo obtido no request
 '''
 def save_file(path: str, request: requests.Response):
-    with open(path, 'wb') as file:
-        for chunk in request.iter_content(chunk_size=net.CHUNK_SIZE):
-            file.write(chunk)
+    localPath = Path(path)
+    if localPath.is_file():
+        Logs.log(f"Arquivo {path} já existe no sistema de arquivos local. Pulando etapa de gravação.")
+    else:
+        with open(path, 'wb') as file:
+            for chunk in request.iter_content(chunk_size=net.CHUNK_SIZE):
+                file.write(chunk)
 
 '''
     Tenta obter o link de uma resposta que veio quebrada.
@@ -182,6 +187,15 @@ def retry_get_pdf(pdfAccLink: str, docLocalPath: str):
             else:
                 save_file(pdfFileName, req)
     return link
+
+'''
+    Verifica quais documentos da lista de links já foram indexados
+    para evitar download duplicado e retorna a lista de documentos
+    ainda não indexados.
+'''
+def verify_indexed_pdfs(pdfLinks: list[str, str]):
+    pdfNames = [doc_name_from_link(pdf) for pdf, _ in pdfLinks]
+    return Indx.not_indexed_docs(pdfNames, 'udi')
 
 '''
     Realiza o download dos arquivos a partir da lista de links
@@ -232,17 +246,17 @@ def fluxo_download(ano: int, mes: int):
     try:
         paginaURL = mount_pagina_url(ano, mes)
         Logs.log(f"Link inicial de pagina obtido: {paginaURL}")
-        docsLinks = []
+        docs = [] 
         while(paginaURL is not None):
             pagina = obter_pagina(paginaURL)
             Logs.log('Pagina obtida, obtendo lista de documentos...')
-            for documento in obter_docs(pagina):
-                docsLinks.append(documento)
+            for documento in obter_docs(pagina): # lista de documentos obtidos ("edicao", "data")
+                docs.append(documento)
             Logs.log('Documentos obtidos, obtendo proxima página...')
             paginaURL = proxima_pagina(pagina)
             Logs.log(f"Proxima pagina: {str(paginaURL)}")
         Logs.log(f'Lista de documentos do mes {str(mes)} obtida, gerando links de pdf...')
-        pdfLinks = pdf_links_from_doc_list(docsLinks, ano, mes)
+        pdfLinks = pdf_links_from_doc_list(docs, ano, mes)
         Logs.log('Iniciando o download a partir da lista de pdfs obtida...')
         return download_and_index_pdfs(pdfLinks)
     except Exception as ex:

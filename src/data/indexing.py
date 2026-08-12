@@ -53,3 +53,12 @@ def index_local(filePath: str, dbName: str, urlBase: str, ano: int, mes: int, di
             Logs.log(f"{docName} já possui uma entrada indexada ou erro de indexacao ocorreu.")
     else:
         Logs.log("Arquivo não é pdf. Indexacao não realizada.")
+
+'''
+Retorna a lista de documentos que não estão indexados a partir da lista de
+documentos.
+'''
+def not_indexed_docs(docList: list[str], dbName: str):
+    db = database.init(f"./data/{dbName}.db")
+    indexed = database.search_indexed(docList, db)
+    return [doc for doc in docList if doc not in indexed]

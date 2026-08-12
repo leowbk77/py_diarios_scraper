@@ -69,5 +69,14 @@ def text_search(text: str, dbCon: sqlite3.Connection):
     cursor = dbCon.cursor()
     return cursor.execute(sql, (text))
 
+def search_indexed(docNameList: list[str], dbCon: sqlite3.Connection):
+    placeholders = ",".join(["?"] * len(docNameList))
+    sql = f"""
+            SELECT d.nm_edicao FROM docs d WHERE d.nm_edicao IN ({placeholders})
+            """
+    cursor = dbCon.cursor()
+    cursor.execute(sql, docNameList)
+    return cursor.fetchall()
+
 def db_exists(dbName: str):
     return Dir.isfile(f"./data/{dbName}.db")
