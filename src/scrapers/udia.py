@@ -9,7 +9,7 @@ import requests
 from bs4 import BeautifulSoup
 from data import indexing as Indx, database as dbUdi
 from utils.helpers import is_pdf, format_dia_mes_str
-from utils import logger as Logs, net
+from utils import logger as Logs, net, config as AppConfig
 from pathlib import Path
 '''
 uso de sessão para evitar reenvio de parametros
@@ -23,8 +23,8 @@ https://www.uberlandia.mg.gov.br/2025/12/?post_type=diariooficial
 Para páginas pré 2018:
 https://www.uberlandia.mg.gov.br/2015/01/?post_type=diario_oficial
 '''
-FILESDIR = './downloads/'
-DATABASE = './data/udi.db'
+FILESDIR = AppConfig.getDownloadPath()
+DATABASE = AppConfig.getDataBasePath() + 'udi.db'
 urlPaginaAtual = ''
 anoAtual = ''
 mesAtual = ''
@@ -208,7 +208,7 @@ def download_and_index_pdfs(links: list[(str,str)]):
             docName = doc_name_from_link(link)
             docAno, docMes = ano_mes_from_pdf_link(link)
             docDia = int(docData[:2])
-            docLocalPath = f"{FILESDIR}/{docName}"
+            docLocalPath = f"{FILESDIR}{docName}"
             Logs.log(f'GET: {docName}')
             with session.get(link, stream=True, timeout=27) as req:
                 if req.status_code != 200:

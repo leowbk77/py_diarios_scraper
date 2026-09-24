@@ -11,6 +11,9 @@ import sqlite3
 import os.path as Dir
 import utils.logger as Logs
 from utils.helpers import format_sqlite_date_str
+from utils import config as AppConfig
+
+DATABASEPATH = AppConfig.getDataBasePath()
 
 def init(db: str) -> sqlite3.Connection:
     return sqlite3.connect(db)
@@ -79,4 +82,4 @@ def search_indexed(docNameList: list[str], dbCon: sqlite3.Connection):
     return cursor.fetchall()
 
 def db_exists(dbName: str):
-    return Dir.isfile(f"./data/{dbName}.db")
+    return Dir.isfile(f"{DATABASEPATH}{dbName}.db")

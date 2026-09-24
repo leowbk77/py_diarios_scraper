@@ -7,7 +7,7 @@ Módulo principal do scraper
 '''
 import scrapers.udia as Udia
 from data import database, indexing
-from utils import logger as Logs, scraper_parser as Args
+from utils import logger as Logs, scraper_parser as Args, config as AppConfig
 
 arg = Args.parser.parse_args()
 Logs.init_log()
@@ -19,14 +19,15 @@ def obter_cidade(argCidade: str | list[str]):
         return argCidade[0]
 
 def init():
+    databasePath = AppConfig.getDataBasePath()
     cidade = obter_cidade(arg.cidade)
     Logs.log(f"Tentando Iniciar database: {cidade}")
     if database.db_exists(f"{cidade}"):
         Logs.log("Database Encontrado - pulando etapa de criacao")
     else:
         Logs.log("Database nao encontrado.")
-        Logs.log(f"Subindo db ./data/{cidade}.db")
-        db = database.init(f"data/{cidade}.db")
+        Logs.log(f"Subindo db {databasePath}{cidade}.db")
+        db = database.init(f"{databasePath}{cidade}.db")
         Logs.log('Criando tabelas')
         database.create_tbl_docs(db)
         database.create_tbl_docs_fts(db)

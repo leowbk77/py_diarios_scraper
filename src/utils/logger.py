@@ -1,13 +1,14 @@
 '''
 lmf
 
-simple_logger.py
+logger.py
 
 Logger para o scraper
 '''
 from datetime import datetime, date
+from utils import config as AppConfig
 
-LOGS_PATH = './logs/'
+LOGS_PATH = AppConfig.getLogsPath()
 LOGS_DATA = date.today().strftime("%d%m%Y")
 LOGS_FILENAME = "log-scrap-" + LOGS_DATA + '.log'
 
@@ -27,15 +28,3 @@ def log(info: str) -> None:
     logInfo = str(datetime.now()) + " [INF] " + info
     to_file(logInfo)
     print(logInfo)
-
-'''
-class Logger:
-
-    def __init__(self, path: str):
-        self.PATH = path
-        self.DATA = date.today().strftime("%d%m%Y")
-        self.LOGS_FILENAME = "log-scrap-" + self.LOGS_DATA + '.txt'
-        try:
-            self.logFile = open()
-        except :
-'''

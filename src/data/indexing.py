@@ -29,15 +29,6 @@ def index(filePath: str, db: sqlite3.Connection, docId: int):
             Logs.log(f"Página {idx}: {e}")
     return True
 
-    ''' bloco antigo que gerava erro e impedia a extração total
-    pageIndx = 1
-    for page in pdf.pages:
-        database.insert_into_tbl_docs_fts(docId, pageIndx, page.extract_text(), db)
-        pageIndx += 1
-    return True
-    '''
-    
-
 '''
 Indexação do documento local
 '''

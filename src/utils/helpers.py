@@ -1,8 +1,14 @@
+'''
+lmf
+
+helpers.py
+
+Funções de auxilio para diferentes scripts que fazem parte do scraper
+'''
 from os import listdir
 from os.path import isfile, join
 import mimetypes
 import ntpath
-
 
 '''
     Verifica se o arquivo da requisição é um pdf

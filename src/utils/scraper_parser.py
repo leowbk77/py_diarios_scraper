@@ -1,20 +1,19 @@
 '''
 lmf
 
-parser_conf.py
+scraper_parser.py
 
 Script de configuração do parser de argumentos do scraper
 '''
 import argparse
 from datetime import date
+from utils import config as AppConfig
 
-ANOMIN = 2015
+ANOMIN = AppConfig.getParserAnoMinimo()
 ANOMAX = date.today().year
 
+CIDADES = AppConfig.getParserCidades()
 UDI = 'udi'
-MONTE = 'monte'
-TESTE = 'teste'
-CIDADES = [UDI, MONTE, TESTE]
 
 parser = argparse.ArgumentParser(
                     prog='Diarios Scraper',
@@ -27,7 +26,7 @@ parser.add_argument('--listc', '-lc',
 parser.add_argument('--cidade', '-c',  
                     nargs=1,
                     type=str,
-                    default=UDI, 
+                    default=CIDADES[0],
                     choices=CIDADES, 
                     help='Seleciona a cidade')
 
@@ -70,7 +69,7 @@ parser.add_argument('--acesso', '-url',
 
 def list_cidades():
     print("CIDADE\t\tIDENTIFICADOR")
-    print("Uberlândia\tudi")
+    AppConfig.listParserCidades()
 
 def ano_mes_valid(ano: int, mes: int):
     if ano >= ANOMIN and ano <= ANOMAX:
