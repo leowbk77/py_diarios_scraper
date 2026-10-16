@@ -10,12 +10,8 @@ import configparser
 from pathlib import Path
 
 settings = configparser.ConfigParser()
-configPath = Path.cwd()
 
-if configPath.name == 'utils':
-    configPath = './../config.ini'
-else:
-    configPath = configPath / "config.ini"
+configPath = Path(__file__).resolve().parents[1] / "config.ini"
 
 settings.read(configPath)
 
